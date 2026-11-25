@@ -1,5 +1,7 @@
 # CloudClaude
 
+CloudClaude is an independent community project. It is not affiliated with, endorsed by, or supported by Anthropic. Claude and Claude Code are Anthropic products.
+
 Your harness runs Claude Code on each workstation in its local Git checkout. Model requests go through private Tailscale HTTPS to NGINX and CLIProxyAPI on Linux. Each named route uses one Claude subscription login. Each workstation authenticates to the gateway with its own revocable token.
 
 CLIProxyAPI documents Claude OAuth. Anthropic describes subscription OAuth as intended for ordinary use of Claude Code and native Anthropic apps. This private gateway setup is experimental. Verify sign-in and subscription-backed inference with one account before adding more. [CLIProxyAPI OAuth docs](https://help.router-for.me/configuration/provider/claude-code) · [Anthropic authentication guidance](https://code.claude.com/docs/en/legal-and-compliance)
