@@ -7,52 +7,20 @@ CLIProxyAPI documents Claude OAuth. Anthropic describes subscription OAuth as in
 ## Architecture
 
 ```mermaid
-flowchart LR
-    subgraph Laptop["Each workstation"]
-        direction TB
-        Harness["Your harness<br/>Select Gateway Work or Gateway Personal"]
-        Terminal["Terminal<br/>claude-gateway work or personal"]
-        Claude["Local Claude Code"]
-        Repo["Local Git repo<br/>Files, edits, shell commands, and tests"]
-        Browser["Browser<br/>Sign in to the selected Claude account"]
-        Harness --> Claude
-        Terminal --> Claude
-        Claude <-->|Local tool calls and results| Repo
-    end
+flowchart TD
+    Client["Choose Work or Personal in your harness or terminal"]
+    Claude["Claude Code on your laptop"]
+    Repo["Local repo: reads, edits, and tests"]
+    Gateway["Linux gateway: Tailscale, NGINX, and CLIProxyAPI"]
+    Anthropic["Anthropic Claude"]
 
-    subgraph Host["Linux gateway host"]
-        direction TB
-        Serve["Tailscale Serve<br/>One private HTTPS origin"]
-        Ingress["NGINX on loopback<br/>Checks allowed API paths and account selector"]
-        Work["CLIProxyAPI Work<br/>Validates the workstation token"]
-        Personal["CLIProxyAPI Personal<br/>Validates the workstation token"]
-        WorkAuth["Work OAuth directory"]
-        PersonalAuth["Personal OAuth directory"]
-        Login["Temporary CLIProxyAPI login container<br/>Loopback callback, port 54545"]
-        Serve <-->|HTTP on loopback| Ingress
-        Ingress <-->|work route| Work
-        Ingress <-->|personal route| Personal
-        WorkAuth <-->|Read and refresh login| Work
-        PersonalAuth <-->|Read and refresh login| Personal
-        Login -.->|Saves login for the chosen service| WorkAuth
-        Login -.->|Saves login for the chosen service| PersonalAuth
-    end
-
-    subgraph Anthropic["Anthropic"]
-        SignIn["Claude account sign-in"]
-        Model["Claude model service"]
-    end
-
-    Claude <-->|HTTPS Messages and streamed responses| Serve
-    Work <-->|Work OAuth| Model
-    Personal <-->|Personal OAuth| Model
-    Browser -.->|One-time browser authorization| SignIn
-    Browser -.->|OAuth callback through SSH tunnel| Login
+    Client --> Claude
+    Claude <--> Repo
+    Claude <-->|Private HTTPS| Gateway
+    Gateway <-->|Selected Claude login| Anthropic
 ```
 
-- **During setup**, run the temporary sign-in container for one account at a time. Complete browser authorization and send the callback through the SSH tunnel. On the WSL host, the same laptop can use localhost forwarding. CLIProxyAPI saves the login in that account's Linux directory.
-- **During a session**, Claude Code sends the workstation's gateway token and the `X-CloudClaude-Account` header. NGINX selects the account service from the header, and that service validates the workstation token before using its saved Claude login. An unrecognized account returns HTTP 404.
-- **During a tool call**, Claude Code reads or edits the local checkout and runs commands on that workstation. Model responses stream back through the same private gateway.
+Sign in to each Claude account once through your browser. The gateway saves those logins, checks your laptop's token, and streams responses back using the account you selected.
 
 ### Using a Windows laptop as the gateway host
 
