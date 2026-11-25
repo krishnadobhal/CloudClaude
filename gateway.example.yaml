@@ -1,0 +1,45 @@
+config-version: 8
+
+server:
+  host: "0.0.0.0"
+  port: 8317
+  commercial-mode: true
+  discovery:
+    enabled: false
+  kv-store:
+    disabled: true
+
+management:
+  allow-remote: false
+  secret-key: ""
+  disable-control-panel: true
+
+access:
+  api-keys:
+    - "REPLACE_PC1_BEARER"
+    - "REPLACE_PC2_BEARER"
+
+oauth:
+  auth-dir: "/var/lib/cloudclaude/oauth"
+
+routing:
+  strategy: round-robin
+  session-affinity: false
+  retry:
+    request-retry: 0
+    max-retry-credentials: 1
+    max-retry-interval: 0
+
+requests:
+  passthrough-headers: false
+  streaming:
+    keepalive-seconds: 0
+    bootstrap-retries: 0
+
+observability:
+  logs:
+    debug: false
+    logging-to-file: false
+    request-log: false
+  usage:
+    usage-statistics-enabled: false

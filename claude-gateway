@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set +x
+set -euo pipefail
+
+account=${1:-}
+if [[ ! $account =~ ^[a-z][a-z0-9-]*$ ]]; then
+    printf 'Usage: claude-gateway <account> [Claude Code arguments...]\n' >&2
+    exit 2
+fi
+shift
+if [[ ! ${CLOUDCLAUDE_URL:-} =~ ^https://[a-zA-Z0-9.-]+\.ts\.net$ ]]; then
+    printf 'Set CLOUDCLAUDE_URL to your private Tailscale HTTPS origin.\n' >&2
+    exit 2
+fi
+command -v claude >/dev/null || { printf 'Claude Code is missing from PATH.\n' >&2; exit 1; }
+IFS= read -r -s -p 'This laptop’s gateway token: ' token </dev/tty
+printf '\n' >&2
+if [[ ! $token =~ ^[0-9a-f]{64}$ ]]; then
+    printf 'Expected a 64-character lowercase hexadecimal gateway token.\n' >&2
+    exit 2
+fi
+
+export ANTHROPIC_BASE_URL="$CLOUDCLAUDE_URL"
+export ANTHROPIC_AUTH_TOKEN="$token"
+export ANTHROPIC_API_KEY=""
+export ANTHROPIC_CUSTOM_HEADERS="X-CloudClaude-Account: $account"
+export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+export CLAUDE_CONFIG_DIR="$HOME/.claude_gateway_${account}"
+exec claude "$@"
